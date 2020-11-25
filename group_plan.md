@@ -22,6 +22,10 @@ Here are some ideas to get our feet wet:
 
 Then we will decide what we want to investigate further. We will meet again on Wednesday.
 
+next step for group1:
+1.figure out the number of bicycles used by different authorities and which authority uses bicycles most often.
+2.do some visualisations: use a heat map or other charts to indicate the number of bicycles used in each authority.
+
 - How do you want to divide the tasks? Are you planning to pair-program?
 Pair programming in groups of 2. 
 Group 1: Julia and Zhiwen
