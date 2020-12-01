@@ -26,6 +26,10 @@ next step for group1:
 1.figure out the number of bicycles used by different authorities and which authority uses bicycles most often.
 2.do some visualisations: use a heat map or other charts to indicate the number of bicycles used in each authority.
 
+next step for group 2:
+1. Find a pattern between the traffic and its proximity to a popular spot (i.e. markets, schools, hospitals)
+2. Present the results using plots and maps
+
 - How do you want to divide the tasks? Are you planning to pair-program?
 Pair programming in groups of 2. 
 Group 1: Julia and Zhiwen
