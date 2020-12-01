@@ -4,7 +4,30 @@ import seaborn
 import matplotlib.pyplot as plt
 from geopy.distance import geodesic
 import time
+import os
 import scipy as sc
+
+def Markets():
+
+    curDir = os.getcwd()
+    marketCsv = os.path.join(curDir,"Main_markets.csv")
+
+    marketDic = pd.read_csv(marketCsv, dtype={"Latitude": float, "Longitude": float}, 
+                            usecols=["City","Latitude","Longitude", "Name"])
+
+    print(marketDic.head())
+
+    return marketDic
+
+def Hospitals():
+
+    curDir = os.getcwd()
+    hospitalCsv = os.path.join(curDir,"Hospital.csv")
+
+    hospitalDic = pd.read_csv(marketCsv, dtype={"Latitude": float, "Longitude": float}, 
+                            usecols=["City","Latitude","Longitude", "Name"])
+    return hospitalDic
+
 
 def GetDistance(row):
     '''
