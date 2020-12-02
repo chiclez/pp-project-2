@@ -1,17 +1,16 @@
-City,Latitude,Longitude,Name,,
-Edinburgh,55.92792374,-3.216628786,Royal Edinburgh Hospital,,
-Edinburgh,55.92171853,-3.135796508,Royal Infirmary of Edinburgh,,
-Edinburgh,55.96247671,-3.234967085,Western General Hospital,,
-Dundee,56.46288388,-3.013357599,Royal Victoria Hospital,,
-Dundee,56.46447307,-3.036976111,Ninewells Hospital,,
-Dundee,56.46732006,-2.877341441,Broughty Ferry Health Centre,,
-Aberdeen,57.1546128,-2.136754345,Aberdeen Royal Infirmary,,
-Aberdeen,57.14867456,-2.173351757,Woodend Hospital,,
-Aberdeen,57.14273414,-2.118332811,BMI Albyn Hospital,,
-Glasgow,55.86610343,-4.233610661,Glasgow Royal Infirmary,,
-Glasgow,55.82873227,-4.263347032,The New Victoria Hospital,,
-Glasgow,55.86498367,-4.339690071,Queen Elizabeth University Hospital,,
-Glasgow,55.88348006,-4.312634458,Gartnavel General Hospital,,
-Glasgow,55.866937,-4.297050926,West Glasgow Ambulatory Care Hospital,,
-Perth,56.39766236,-3.456779999,Perth Royal Infirmary,,
-,,,,,
+id,city,latitude,longitude,name
+0,Edinburgh,55.92792374,-3.216628786,Royal Edinburgh Hospital
+1,Edinburgh,55.92171853,-3.135796508,Royal Infirmary of Edinburgh
+2,Edinburgh,55.96247671,-3.234967085,Western General Hospital
+3,Dundee,56.46288388,-3.013357599,Royal Victoria Hospital
+4,Dundee,56.46447307,-3.036976111,Ninewells Hospital
+5,Dundee,56.46732006,-2.877341441,Broughty Ferry Health Centre
+6,Aberdeen,57.1546128,-2.136754345,Aberdeen Royal Infirmary
+7,Aberdeen,57.14867456,-2.173351757,Woodend Hospital
+8,Aberdeen,57.14273414,-2.118332811,BMI Albyn Hospital
+9,Glasgow,55.86610343,-4.233610661,Glasgow Royal Infirmary
+10,Glasgow,55.82873227,-4.263347032,The New Victoria Hospital
+11,Glasgow,55.86498367,-4.339690071,Queen Elizabeth University Hospital
+12,Glasgow,55.88348006,-4.312634458,Gartnavel General Hospital
+13,Glasgow,55.866937,-4.297050926,West Glasgow Ambulatory Care Hospital
+14,Perth,56.39766236,-3.456779999,Perth Royal Infirmary
