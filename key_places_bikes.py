@@ -129,6 +129,19 @@ def CityData(rawData):
     return cityRoads
 
 def HospitalBikes():
+    
+    '''
+    This function will calculate the closest roadpoint to each hospital listed
+    in the Hospital.csv file, and will output a dataframe containing the original
+    Hospital csv file and the closest roadpoint, and the number of bicyles that 
+    passed it.
+
+    Input:  None
+
+    Output
+    hospitalCycles: Pandas dataframe containing the hospital information, closest
+                    roadpoint and the number of cycles found in the whole dataset.
+    '''
 
     # Load the top 5 cities data
     rawData = LoadData()
@@ -174,6 +187,19 @@ def HospitalBikes():
     return hospitalsCycles
 
 def MarketBikes():
+
+    '''
+    This function will calculate the closest roadpoint to each markets listed
+    in the Main_markets.csv file, and will output a dataframe containing the original
+    Main_markets csv file and the closest roadpoint, and the number of bicyles that 
+    passed it.
+
+    Input:  None
+
+    Output
+    marketCycles: Pandas dataframe containing the market information, closest
+                  roadpoint and the number of cycles found in the whole ddataset.
+    '''
 
     # Load the top 5 cities data
     rawData = LoadData()
