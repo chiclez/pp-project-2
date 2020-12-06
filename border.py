@@ -1,48 +1,53 @@
 import pandas as pd
-import numpy as np
-import seaborn
 import math
-import matplotlib.pyplot as plt
 from geopy.distance import geodesic
 from geopy.point import Point as Point
-import time
 import os
-import scipy as sc
 
-def Midpoint():
+def CalculateMidpoint():
 
     '''
     This midpoint formula will calculate the midpoint of the Scottish border
     using the equation found at http://www.movable-type.co.uk/scripts/latlong.html
+    This function uses the Point function from geopy
+
+    Input: None
+
+    Output: 
+    midPoint: a tupple containing the midpoint of the border. 
     '''
 
     #borderWest = [55.0, -3.0]
     #borderEast = [55.81, -2.03]
-    borderWest = [54.995769, -3.052872]
-    borderEast = [55.806881, -2.042987]
+    borderWest = (54.995769, -3.052872)
+    borderEast = (55.806881, -2.042987)
 
-    borderCenter = []
-
+    # Convert the coordinates to radians
     borderWestLat, borderWestLon = math.radians(borderWest[0]), math.radians(borderWest[1])
     borderEastLat, borderEastLon = math.radians(borderEast[0]), math.radians(borderEast[1])
 
+    # Follow the equations found at http://www.movable-type.co.uk/scripts/latlong.html
+    # Constants
     deltaLon = borderEastLon - borderWestLon
     bx = math.cos(borderEastLat) * math.cos(deltaLon)
     by = math.cos(borderEastLat) * math.sin(deltaLon)
+    
+    # Coordinates of the midpoint
     midLat = math.atan2(math.sin(borderWestLat) + math.sin(borderEastLat),
         math.sqrt(((math.cos(borderWestLat) + bx) ** 2 + by ** 2)))
     midLon = borderWestLon + math.atan2(by, math.cos(borderWestLat) + bx)
     
-    # Normalise to a −180 … +180 range
+    # Normalise the longitude to a −180 … +180 range
     midLon = (midLon + 3 * math.pi) % (2 * math.pi) - math.pi
 
     # Convert back to degrees
     midLat = math.degrees(midLat)
     midLon = math.degrees(midLon)
 
-    midPoint = Point(latitude = midLat, longitude=midLon)
+    # Calculate the midpoint using the Point geopy function
+    midpoint = Point(latitude = midLat, longitude=midLon)
 
-    return midPoint
+    return midpoint
 
 def GetDistance(keyPlace, roadpoint):
     '''
@@ -67,14 +72,20 @@ def GetDistance(keyPlace, roadpoint):
 
 def LoadData():
 
-    rawData = pd.read_csv("dft_rawcount_region_id_3.csv", parse_dates = ["year"], 
-                          dtype={'start_junction_road_name': str,
-                                 'end_junction_road_name': str})
-    rawData.rename(columns = {"year":"date"}, inplace = True)
-    rawData["date"] = pd.to_datetime(rawData["date"], yearfirst = True, 
-                      infer_datetime_format= True)
+    '''
+    This function loads the DFT dataset csv file as a pandas dataframe. It will
+    process the dataframeand convert columns to a suitable format for data analysis
 
-    rawData["year"] = pd.to_datetime(rawData["date"], yearfirst = True).dt.year
+    Input: None
+    Output: rawData (DFT dataframe) 
+    '''
+
+     # Import the csv parsing dates and setting the junction road names columns 
+     # as strings.
+    rawData = pd.read_csv("dft_rawcount_region_id_3.csv", parse_dates = ["count_date"], 
+                          dtype={'start_junction_road_name': str, 'end_junction_road_name': str})
+
+    rawData["count_date"] = pd.to_datetime(rawData["count_date"], yearfirst = True, infer_datetime_format= True)
 
     return rawData
 
@@ -109,13 +120,15 @@ def LocateBikesBorders():
     borderData = ScottishBorders(rawData)
     borderData = borderData.loc[(borderData["pedal_cycles"] > 0)]
 
+    # The maximum distance to find a roadpoint from the midpoint is 10 km
     distance = 10
 
-    # Get the midpoint coordinates in tupple form
-    midPoint = (Midpoint().latitude, Midpoint().longitude)
+    # Get the midpoint and cast the coordinates in tupple form
+    midpoint = CalculateMidpoint()
+    midpointCoordinates = (midpoint.latitude, midpoint.longitude)
 
     # Find the geodesic distance to the midpoint
-    borderData["distance_to_border"] = borderData.apply(lambda row: GetDistance(midPoint, row), axis=1)
+    borderData["distance_to_border"] = borderData.apply(lambda row: GetDistance(midpoint, row), axis=1)
 
     # Select only the roadpoints within the allowed distance
     bikesOnBorders = borderData.loc[(borderData["distance_to_border"] <= distance)]
@@ -126,6 +139,7 @@ def LocateBikesBorders():
 
 def LocateBikesBordersInterval():
 
+    # STILL  INCOMPLETE
     rawData = LoadData()
     borderData = ScottishBorders(rawData)
     borderData = borderData.loc[(borderData["pedal_cycles"] > 0)]

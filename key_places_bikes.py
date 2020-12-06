@@ -88,16 +88,11 @@ def LoadData():
 
      # Import the csv parsing dates and setting the junction road names columns 
      # as strings. Rename the "Year" column to reflect a more appropriate name
-
-    rawData = pd.read_csv("dft_rawcount_region_id_3.csv", parse_dates = ["year"], 
+    rawData = pd.read_csv("dft_rawcount_region_id_3.csv", parse_dates = ["count_date"], 
                           dtype={'start_junction_road_name': str,
                                  'end_junction_road_name': str})
-    rawData.rename(columns = {"year":"date"}, inplace = True)
-    rawData["date"] = pd.to_datetime(rawData["date"], yearfirst = True, 
-                      infer_datetime_format= True)
-
-    # Create a new column called "year" and only store the year
-    rawData["year"] = pd.to_datetime(rawData["date"], yearfirst = True).dt.year
+    #rawData.rename(columns = {"year":"date"}, inplace = True)
+    rawData["count_date"] = pd.to_datetime(rawData["count_date"], yearfirst = True, infer_datetime_format= True)
 
     return rawData
 
@@ -123,102 +118,64 @@ def CityData(rawData):
                            (rawData["local_authority_name"] == "Dundee City")]
          
     # Group the roads
-    cityRoads = pd.DataFrame({'count': cityRoads.groupby(["count_point_id", 
+    cityRoads = pd.DataFrame({'count': cityRoads.groupby(["count_point_id", "year",
                            "latitude", "longitude","pedal_cycles"]).size()}).reset_index()
 
     return cityRoads
 
-def HospitalBikes():
+def BikesOnPopularSpots(option):
     
     '''
-    This function will calculate the closest roadpoint to each hospital listed
-    in the Hospital.csv file, and will output a dataframe containing the original
-    Hospital csv file and the closest roadpoint, and the number of bicyles that 
-    passed it.
+    This function will calculate the closest roadpoint to each hospital or market 
+    listed in the input Hospital.csv or Main_market.csv files, and will output a 
+    dataframe containing the original input csv file and the closest roadpoint, 
+    and the number of bicyles that passed by it.
 
-    Input:  None
+    Input 
+    option: The user selection for finding the bikes passing around markets or 
+            hospitals. This argument is a string containing the selected option. 
+            The possible options are: "markets" and "hospitals". 
+            i.e. Bikes("markets") will calculate the closest point to each market
+            and find the number of bicycles that passed by it.
 
     Output
-    hospitalCycles: Pandas dataframe containing the hospital information, closest
-                    roadpoint and the number of cycles found in the whole dataset.
+    cycles: Pandas dataframe containing the hospital or market information, closest
+            roadpoint and the number of cycles found in the whole dataset.
     '''
 
     # Load the top 5 cities data
     rawData = LoadData()
     cityRoads = CityData(rawData)
 
-    # Load Hospitals data
-    hospitalInfo = Hospitals()
+    # Load hospitals or markets data
+    if (option == "hospitals"):
 
-    hospitalCoordinates = hospitalInfo[["latitude", "longitude"]]
+        # Hospital's data
+        spotInfo = Hospitals()
 
-    closest_roadpoint = []
-    distance_roadpoint = []
-
-    # Find the geodesic distance to a key place
-    for i in range(0, len(hospitalInfo)):
-        coordinates = (hospitalCoordinates.iloc[i,0], hospitalCoordinates.iloc[i,1])
-        cityRoads[f"market_{i}"] = cityRoads.apply(lambda row: GetDistance(coordinates, row), axis=1)
-
-        # Find the minimum distance and the index location
-        minDistance = cityRoads[f"market_{i}"].min()
-        idx = cityRoads[f"market_{i}"].idxmin()
-
-        # Get the roadpoint id and append to a list
-        roadpoint = cityRoads.iloc[idx,0]
-        closest_roadpoint.append(roadpoint)
-        distance_roadpoint.append(minDistance)
-
-    # Add the filled lists into the dataframe as columns
-    hospitalInfo["count_point_id"] = closest_roadpoint
-    hospitalInfo["distance"] = distance_roadpoint
-
-    # Select only the pedal_cycles columns and road point it from the DFT dataframe
-    bikesOnRoads = cityRoads[["count_point_id","pedal_cycles"]]
-
-    # Merge the datasets using inner join
-    hospitalsCycles = pd.merge(hospitalInfo, bikesOnRoads, how = "inner", on = "count_point_id")
-
-    # Group the pedal_cycles column and sum them
-    hospitalsCycles = hospitalsCycles.groupby(["city","latitude","longitude","name",
-                                           "count_point_id","distance"], 
-                                          as_index=False)["pedal_cycles"].sum()
-
-    return hospitalsCycles
-
-def MarketBikes():
-
-    '''
-    This function will calculate the closest roadpoint to each markets listed
-    in the Main_markets.csv file, and will output a dataframe containing the original
-    Main_markets csv file and the closest roadpoint, and the number of bicyles that 
-    passed it.
-
-    Input:  None
-
-    Output
-    marketCycles: Pandas dataframe containing the market information, closest
-                  roadpoint and the number of cycles found in the whole ddataset.
-    '''
-
-    # Load the top 5 cities data
-    rawData = LoadData()
-    cityRoads = CityData(rawData)
-
-    # Load Market data
-    marketInfo = Markets()
-
-    marketCoordinates = marketInfo[["latitude", "longitude"]]
-
-    closest_roadpoint = []
-    distance_roadpoint = []
-
-    
-    # Find the geodesic distance to a key place
-    for i in range(0, len(marketInfo)):
-        coordinates = (marketCoordinates.iloc[i,0], marketCoordinates.iloc[i,1])
-        cityRoads[f"market_{i}"] = cityRoads.apply(lambda row: GetDistance(coordinates, row), axis=1)
+    elif (option == "markets"):
         
+        # Market's data
+        spotInfo = Markets()
+    
+    else:
+        
+        # Neither hospitals nor markets
+        print("Invalid option. The only valid options are markets or hospitals. Try again")
+        return
+        
+    # Select only the coordinates found in the markets/hospitals dataframe
+    spotCoordinates = spotInfo[["latitude", "longitude"]]
+
+    # Empty lists to be filled with the distances and roadpoints
+    closest_roadpoint = []
+    distance_roadpoint = []
+
+    # Find the geodesic distance between a place and a roadpoint    
+    for i in range(0, len(spotInfo)):
+        coordinates = (spotCoordinates.iloc[i,0], spotCoordinates.iloc[i,1])
+        cityRoads[f"market_{i}"] = cityRoads.apply(lambda row: GetDistance(coordinates, row), axis=1)
+
         # Find the minimum distance and the index location
         minDistance = cityRoads[f"market_{i}"].min()
         idx = cityRoads[f"market_{i}"].idxmin()
@@ -229,18 +186,16 @@ def MarketBikes():
         distance_roadpoint.append(minDistance)
 
     # Add the filled lists into the dataframe as columns
-    marketInfo["count_point_id"] = closest_roadpoint
-    marketInfo["distance"] = distance_roadpoint
+    spotInfo["count_point_id"] = closest_roadpoint
+    spotInfo["distance"] = distance_roadpoint
 
     # Select only the pedal_cycles columns and road point it from the DFT dataframe
-    bikesOnRoads = cityRoads[["count_point_id","pedal_cycles"]]
+    bikesOnRoads = cityRoads[["count_point_id","pedal_cycles", "year"]]
 
     # Merge the datasets using inner join
-    marketsCycles = pd.merge(marketInfo, bikesOnRoads, how = "inner", on = "count_point_id")
+    cycles = pd.merge(spotInfo, bikesOnRoads, how = "inner", on = "count_point_id")
 
-    # Group the pedal_cycles column and sum them 
-    marketsCycles = marketsCycles.groupby(["city","latitude","longitude","name",
-                                           "count_point_id","distance"], 
-                                          as_index=False)["pedal_cycles"].sum()
+    return cycles
 
-    return marketsCycles
+a = BikesOnPopularSpots("hospitals")
+print(a)
