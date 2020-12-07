@@ -17,8 +17,6 @@ def CalculateMidpoint():
     midPoint: a tupple containing the midpoint of the border. 
     '''
 
-    #borderWest = [55.0, -3.0]
-    #borderEast = [55.81, -2.03]
     borderWest = (54.995769, -3.052872)
     borderEast = (55.806881, -2.042987)
 
@@ -80,8 +78,7 @@ def LoadData():
     Output: rawData (DFT dataframe) 
     '''
 
-     # Import the csv parsing dates and setting the junction road names columns 
-     # as strings.
+     # Import the csv parsing dates and setting the junction road names columns as strings.
     rawData = pd.read_csv("dft_rawcount_region_id_3.csv", parse_dates = ["count_date"], 
                           dtype={'start_junction_road_name': str, 'end_junction_road_name': str})
 
@@ -89,36 +86,26 @@ def LoadData():
 
     return rawData
 
-def ScottishBorders(rawData):
-
-    '''
-    This function will call the DFT dataframe and will process only the Scottish
-    borders county. Scottish Borders comprises: Berwickshire, Peeblesshire, 
-    Roxburghshire, and Selkirkshire
-
-    Input
-    rawData: DFT dataframe
-
-    Output
-    borderRoads: Filtered dataset containing the data for the Scottish Borders
-    
-    '''
-
-    # Select data considering the border
-    borderRoads = rawData.loc[(rawData["local_authority_name"] == "Scottish Borders")]
-         
-    # Group the roads
-    borderRoads = pd.DataFrame({'count': borderRoads.groupby(["year", "count_point_id", 
-                               "road_type","road_name", "latitude", "longitude", 
-                               "pedal_cycles"]).size()}).reset_index()
-
-    return borderRoads
-
 def LocateBikesBorders():
 
+    '''
+    This function will locate the bicycles found on a 10 km distance to the Anglo
+    Scottish border using a midpoint approach. The midpoint is calculated by using
+    the far east and far west coordinates of the border.
+
+    Input: None
+
+    Output
+    bikesOnBorders: a pandas dataframe with the roadpoint, coordinates, distance
+    to the border and number of bikes found across the whole DFT dataset
+    '''
+
+    #Load the DFT data
     rawData = LoadData()
-    borderData = ScottishBorders(rawData)
-    borderData = borderData.loc[(borderData["pedal_cycles"] > 0)]
+
+    # Select data only from the Scottish borders county and only with pedal_cycles
+    borderData = rawData.loc[(rawData["local_authority_name"] == "Scottish Borders")
+                             & (rawData["pedal_cycles"] > 0)]
 
     # The maximum distance to find a roadpoint from the midpoint is 10 km
     distance = 10
@@ -127,45 +114,78 @@ def LocateBikesBorders():
     midpoint = CalculateMidpoint()
     midpointCoordinates = (midpoint.latitude, midpoint.longitude)
 
-    # Find the geodesic distance to the midpoint
-    borderData["distance_to_border"] = borderData.apply(lambda row: GetDistance(midpoint, row), axis=1)
+    # Prepare a copy of the original dataframe for calculating the distances
+    bikesOnBorders = borderData.copy()
 
-    # Select only the roadpoints within the allowed distance
-    bikesOnBorders = borderData.loc[(borderData["distance_to_border"] <= distance)]
-    bikesOnBorders = bikesOnBorders.drop(columns = ["count"])
+    # Find the geodesic distance to the midpoint
+    bikesOnBorders["distance_to_border"] = borderData.apply(lambda row: GetDistance(midpointCoordinates, row), axis=1)
+
+    # Create a new dataframe by selecting only the required information from the original dataframe
+    bikesOnBorders = bikesOnBorders[["year", "count_point_id", "road_type","road_name", 
+                                  "latitude", "longitude", "pedal_cycles", "distance_to_border"]]
+
+    # Select only the roadpoints within the allowed distance and sort by year
+    bikesOnBorders = bikesOnBorders.loc[(bikesOnBorders["distance_to_border"] <= distance)]
     bikesOnBorders = bikesOnBorders.sort_values(by=["year"], ascending = True)
 
     return bikesOnBorders
 
 def LocateBikesBordersInterval():
 
-    # STILL  INCOMPLETE
+    '''
+    This function will locate the bicycles found on a 1.1 km distance to the Anglo
+    Scottish border using an interval approach done on the latitude or the longitude
+    from every major crossing point. 
+
+    Input: None
+
+    Output
+    bikesOnBorders: a pandas dataframe with the roadpoint, coordinates, distance
+    to the border and number of bikes found across the whole DFT dataset
+    '''
+
+    #Load the DFT data
     rawData = LoadData()
-    borderData = ScottishBorders(rawData)
-    borderData = borderData.loc[(borderData["pedal_cycles"] > 0)]
 
-    distance = 10
+    # Select data only from the Scottish borders county and only with pedal_cycles
+    borderData = rawData.loc[(rawData["local_authority_name"] == "Scottish Borders")
+                             & (rawData["pedal_cycles"] > 0)]
 
+    # Border crossing coordinates
     borderWest = [54.995769, -3.052872]
     borderEast = [55.806881, -2.042987]
+    jedburghCross = [55.354486, -2.478119]
+    carlisleCross = [55.049714, -2.960520]
+    coldstreamCross = [55.654783, -2.242233]
+    ladykirkCross = [55.718895, -2.177002]
+    deadwaterCross = [55.355528  -2.481019]
+    kelsoCross = [55.566299, -2.263140]
 
-    interval = 0.1
+    # Set an  interval of 0.01 degrees (equivalent to 1.11 km)
+    interval = 0.01
 
-    newBorderW = [borderWest[0]+interval, borderWest[1]]
+    # Filter the roadpoints within the border area in latitude: border + interval
+    # and in longitude: border - interval (where necessary)
+    bikesOnBorders = borderData.loc[((borderData["latitude"] >= borderWest[0]) &
+                                     (borderData["latitude"] <= borderWest[0] + interval)) | 
+                                     ((borderData["latitude"] >= jedburghCross[0]) &
+                                     (borderData["latitude"] <= jedburghCross[0] + interval)) |
+                                     ((borderData["longitude"] >= jedburghCross[1]) &
+                                     (borderData["longitude"] <= jedburghCross[1] - interval)) |
+                                     ((borderData["latitude"] >= carlisleCross[0]) &
+                                     (borderData["latitude"] <= carlisleCross[0] + interval))|
+                                     ((borderData["latitude"] >= kelsoCross[0]) &
+                                     (borderData["latitude"] <= kelsoCross[0] - interval)) |
+                                     ((borderData["longitude"] >= coldstreamCross[1]) &
+                                     (borderData["longitude"] <= coldstreamCross[1] - interval))|
+                                     ((borderData["latitude"] >= deadwaterCross[0]) &
+                                     (borderData["latitude"] <= deadwaterCross[0] + interval))|
+                                     ((borderData["latitude"] >= borderEast[0]) &
+                                     (borderData["latitude"] <= borderEast[0] + interval))]
 
-    midPoint = Midpoint()
-    middlePoint = (midPoint.latitude, midPoint.longitude)
-
-    # Find the geodesic distance to a the midpoint
-    borderData["distance_to_border"] = borderData.apply(lambda row: GetDistance(middlePoint, row), axis=1)
-
-    # Select only the roadpoints within the allowed distance
-    bikesOnBorders = borderData.loc[(borderData["distance_to_border"] <= distance)]
-    bikesOnBorders = bikesOnBorders.drop(columns = ["count"])
-
+    # Create a new dataframe by selecting only the required information from the original dataframe
+    bikesOnBorders = bikesOnBorders[["year", "count_point_id", "road_type","road_name", 
+                                  "latitude", "longitude", "pedal_cycles"]]
     bikesOnBorders = bikesOnBorders.sort_values(by=["year"], ascending = True)
 
     return bikesOnBorders
-
-a = LocateBikesBorders()
-print(a)

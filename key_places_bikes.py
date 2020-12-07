@@ -1,11 +1,7 @@
 import pandas as pd
 import numpy as np
-import seaborn
-import matplotlib.pyplot as plt
 from geopy.distance import geodesic
-import time
 import os
-import scipy as sc
 
 def Hospitals():
 
@@ -86,13 +82,12 @@ def LoadData():
     Output: rawData (DFT dataframe) 
     '''
 
-     # Import the csv parsing dates and setting the junction road names columns 
-     # as strings. Rename the "Year" column to reflect a more appropriate name
+    # Import the csv parsing dates and setting the junction road names columns 
+    # as strings. Rename the "Year" column to reflect a more appropriate name
     rawData = pd.read_csv("dft_rawcount_region_id_3.csv", parse_dates = ["count_date"], 
-                          dtype={'start_junction_road_name': str,
-                                 'end_junction_road_name': str})
-    #rawData.rename(columns = {"year":"date"}, inplace = True)
-    rawData["count_date"] = pd.to_datetime(rawData["count_date"], yearfirst = True, infer_datetime_format= True)
+                          dtype={'start_junction_road_name': str, 'end_junction_road_name': str})
+    rawData["count_date"] = pd.to_datetime(rawData["count_date"], yearfirst = True, 
+                                           infer_datetime_format= True)
 
     return rawData
 
@@ -196,6 +191,3 @@ def BikesOnPopularSpots(option):
     cycles = pd.merge(spotInfo, bikesOnRoads, how = "inner", on = "count_point_id")
 
     return cycles
-
-a = BikesOnPopularSpots("hospitals")
-print(a)
