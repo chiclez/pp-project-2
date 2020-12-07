@@ -189,5 +189,6 @@ def BikesOnPopularSpots(option):
 
     # Merge the datasets using inner join
     cycles = pd.merge(spotInfo, bikesOnRoads, how = "inner", on = "count_point_id")
+    cycles = cycles.loc[cycles["pedal_cycles"]>0]
 
     return cycles
