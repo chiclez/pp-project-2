@@ -238,7 +238,6 @@ def FindBikesPolygon():
     borderEast = (55.806881, -2.042987)
     borderCarham = (55.63214657346817, -2.336614595368269)
     borderCheviot = (55.35494550715024, -2.4775857685793206)
-    borderShotton = (55.56652764514263, -2.263512214239654)
 
     # Set an border boundary of 0.005 degrees (equivalent to 555 m)
     boundary = 0.005
